@@ -1,14 +1,15 @@
 import prisma from "../prisma.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-dotenv.config("./.env");
+dotenv.config();
 
 const setCookie = (res, token) => {
   res.cookie("token", token, {
-    httpOnly: true, // prevent XSS attacks, cross site scripting attack
+    httpOnly: true, // prevent XSS attacks
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict", // prevents CSRF attack, cross-site request forgery attack
+    sameSite: "strict", // prevents CSRF attack
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -32,11 +33,19 @@ export const register = async (req, res) => {
       data: { name, email, password: hashedPassword, phoneNo, address },
     });
 
+    // Generate JWT Token
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
     setCookie(res, token);
 
-    res
-      .status(201)
-      .json({ success: true, message: "User registered successfully", user });
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      token,
+      user: { id: user.id, name: user.name, email: user.email },
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -66,9 +75,14 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
+    // Generate JWT Token
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
     setCookie(res, token);
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: "User logged in",
       token,
@@ -89,19 +103,20 @@ export const login = async (req, res) => {
   }
 };
 
-// User Logout
+// Logout
 export const logout = async (req, res) => {
   res.clearCookie("token");
   res.json({ success: true, message: "Logged out" });
 };
 
-// Get User Profile (Protected)
+// Get User Profile
 export const getProfile = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
       select: { id: true, name: true, email: true, role: true },
     });
+
     if (!user) {
       return res
         .status(404)
@@ -117,17 +132,20 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Update User Profile
+// Update Profile
 export const updateProfile = async (req, res) => {
   try {
     const { name, email, password, phoneNo, address } = req.body;
 
-    // Hash Password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let updateData = { name, email, phoneNo, address };
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.userId },
-      data: { name, email, hashedPassword, phoneNo, address },
+      data: updateData,
     });
 
     res.status(200).json({

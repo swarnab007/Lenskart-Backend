@@ -4,6 +4,11 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRouter from "./routes/authRoutes.js";
+import productRouter from "./routes/productRoutes.js";
+import cartRouter from "./routes/cartRoutes.js";
+import couponRouter from "./routes/couponRoutes.js";
+import wishlistRouter from "./routes/wishlistRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js";
 
 dotenv.config("./.env");
 
@@ -32,6 +37,11 @@ app.use(cors(corsOptions));
 
 // Routes
 app.use("/api/auth", authRouter);
+app.use("/api/products", productRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/coupons", couponRouter);
+app.use("/api/wishlist", wishlistRouter);
+app.use("/api/reviews", reviewRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
