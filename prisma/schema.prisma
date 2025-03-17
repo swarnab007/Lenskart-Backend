@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  phoneNo   String   @unique
+  name      String
+  address   String
+  role      Role     @default(user)
+  cart      Json     @default("[]") // Stores cart items as JSON
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  image       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products   Json
+  status     OrderStatus @default(PENDING)
+  total      Float
+  couponCode String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Coupon {
+  id         Int       @id @default(autoincrement())
+  code       String    @unique
+  discount   Float
+  expiresAt  DateTime?
+  usageLimit Int       @default(1)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
