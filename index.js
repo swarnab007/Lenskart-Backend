@@ -13,11 +13,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-  })
-);
+app.use(helmet());
+
 const corsOptions = {
   origin: ["http://localhost:5173"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -32,7 +29,6 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
-app.use(cors());
 
 // Routes
 app.use("/api/auth", authRouter);

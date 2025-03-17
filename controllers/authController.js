@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 
 dotenv.config("./.env");
 
-
 const setCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true, // prevent XSS attacks, cross site scripting attack
@@ -39,6 +38,7 @@ export const register = async (req, res) => {
       .status(201)
       .json({ success: true, message: "User registered successfully", user });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Error in Registration",
@@ -68,7 +68,9 @@ export const login = async (req, res) => {
 
     setCookie(res, token);
 
-    res.json({
+    res.status(201).json({
+      success: true,
+      message: "User logged in",
       token,
       user: {
         id: user.id,
@@ -80,7 +82,10 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -98,11 +103,42 @@ export const getProfile = async (req, res) => {
       select: { id: true, name: true, email: true, role: true },
     });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-    res.json(user);
+    res.status(200).json({ success: true, message: "User found", user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+// Update User Profile
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, email, password, phoneNo, address } = req.body;
+
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { name, email, hashedPassword, phoneNo, address },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
