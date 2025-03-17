@@ -1,4 +1,4 @@
-import prisma from "..prisma.js";
+import prisma from "../prisma.js";
 
 // Get Product Reviews
 export const getProductReviews = async (req, res) => {

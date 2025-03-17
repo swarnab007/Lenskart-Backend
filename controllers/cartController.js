@@ -27,7 +27,7 @@ export const getCartProducts = async (req, res) => {
 };
 
 // Add Product to Cart
-export const addProductToCart = async (req, res) => {
+export const addToCart = async (req, res) => {
   try {
     const { productId } = req.body;
 
@@ -104,7 +104,7 @@ export const updateProductQuantity = async (req, res) => {
 };
 
 // Clear Cart
-export const clearCart = async (req, res) => {
+export const removeAllFromCart = async (req, res) => {
   try {
     await prisma.cartItem.deleteMany({ where: { userId: req.user.userId } });
 

@@ -3,19 +3,19 @@ import {
   addToCart,
   getCartProducts,
   removeAllFromCart,
-  updateQuantity,
+  updateProductQuantity,
 } from "../controllers/cartController.js";
-import { protectRoute } from "../middlewares/authMiddleware.js";
+import { protectedRoute } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // GET : All Cart Products
-router.get("/", protectRoute, getCartProducts);
+router.get("/", protectedRoute, getCartProducts);
 // POST : Add Product to Cart
-router.post("/", protectRoute, addToCart);
+router.post("/", protectedRoute, addToCart);
 // DELETE : Remove all Products from Cart
-router.delete("/", protectRoute, removeAllFromCart);
+router.delete("/", protectedRoute, removeAllFromCart);
 // PUT : Update Quantity of a Product in Cart
-router.put("/:id", protectRoute, updateQuantity);
+router.put("/:id", protectedRoute, updateProductQuantity);
 
 export default router;
