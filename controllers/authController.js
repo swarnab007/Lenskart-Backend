@@ -113,7 +113,7 @@ export const logout = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
+      where: { id: req.user.id },
       select: { id: true, name: true, email: true, role: true },
     });
 

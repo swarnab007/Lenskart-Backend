@@ -1,51 +1,49 @@
 import jwt from "jsonwebtoken";
 import prisma from "../prisma.js";
-import dotenv from "dotenv";
 
-dotenv.config("./.env");
-
-// Protected Route Middleware
 export const protectedRoute = async (req, res, next) => {
   try {
     const token = req.cookies.token;
+    console.log("Token Received:", token);
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - No access token provided",
-      });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized - No token" });
     }
 
     try {
-      const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // console.log("Decoded Token:", decoded);
+
+      if (!decoded.userId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid token format" });
+      }
 
       // Fetch user from Prisma
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
-        select: { id: true, name: true, email: true, role: true }, // Exclude password
+        select: { id: true, name: true, email: true, role: true },
       });
 
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "No user found with this id",
-        });
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
       }
 
       req.user = user;
       next();
     } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or expired token",
-      });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid or expired token" });
     }
   } catch (error) {
     console.error("Protected Route Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error in protected middleware",
-    });
+    res.status(500).json({ success: false, message: "Middleware error" });
   }
 };
 

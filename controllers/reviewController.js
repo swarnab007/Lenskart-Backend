@@ -3,7 +3,7 @@ import prisma from "../prisma.js";
 // Get Product Reviews
 export const getProductReviews = async (req, res) => {
   try {
-    const { productId } = req.params;
+    const productId = parseInt(req.params.productId, 10);
 
     const reviews = await prisma.review.findMany({
       where: { productId },

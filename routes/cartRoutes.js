@@ -10,12 +10,12 @@ import { protectedRoute } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 // GET : All Cart Products
-router.get("/", protectedRoute, getCartProducts);
+router.get("/get-cart", protectedRoute, getCartProducts);
 // POST : Add Product to Cart
-router.post("/", protectedRoute, addToCart);
+router.post("/add-cart", protectedRoute, addToCart);
 // DELETE : Remove all Products from Cart
-router.delete("/", protectedRoute, removeAllFromCart);
+router.delete("/delete-cart", protectedRoute, removeAllFromCart);
 // PUT : Update Quantity of a Product in Cart
-router.put("/:id", protectedRoute, updateProductQuantity);
+router.put("/add/:id", protectedRoute, updateProductQuantity);
 
 export default router;

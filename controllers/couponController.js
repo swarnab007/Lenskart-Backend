@@ -1,23 +1,21 @@
 import prisma from "../prisma.js";
 
-// Get Active Coupon for User
-export const getCoupon = async (req, res) => {
+// Get All Coupons (Admin Only)
+export const getCoupons = async (req, res) => {
   try {
-    const coupon = await prisma.coupon.findFirst({
+    const coupons = await prisma.coupon.findMany({
       where: {
-        userId: req.user.id,
-        expiresAt: { gte: new Date() }, // Ensure coupon is not expired
-        usageLimit: { gt: 0 }, // Ensure coupon is still valid
+        expiryDate: { gte: new Date() }, // Only active coupons
       },
     });
 
-    if (!coupon) {
+    if (!coupons.length) {
       return res.status(404).json({ success: false, message: "No active coupons found" });
     }
 
-    res.status(200).json({ success: true, coupon });
+    res.status(200).json({ success: true, coupons });
   } catch (error) {
-    console.error("Error fetching coupon:", error.message);
+    console.error("Error fetching coupons:", error.message);
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
@@ -35,25 +33,27 @@ export const validateCoupon = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invalid coupon code" });
     }
 
-    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+    if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
       return res.status(400).json({ success: false, message: "Coupon has expired" });
     }
 
-    if (coupon.usageLimit <= 0) {
+    // If `usageLimit` exists in schema, reduce its value
+    if (coupon.usageLimit !== undefined && coupon.usageLimit <= 0) {
       return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
     }
 
-    // Reduce usage count if it's a single-use coupon
-    await prisma.coupon.update({
-      where: { id: coupon.id },
-      data: { usageLimit: coupon.usageLimit - 1 },
-    });
+    if (coupon.usageLimit !== undefined) {
+      await prisma.coupon.update({
+        where: { id: coupon.id },
+        data: { usageLimit: coupon.usageLimit - 1 },
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "Coupon is valid",
       discount: coupon.discount,
-      expiresAt: coupon.expiresAt,
+      expiryDate: coupon.expiryDate,
     });
   } catch (error) {
     console.error("Error validating coupon:", error.message);
@@ -61,22 +61,22 @@ export const validateCoupon = async (req, res) => {
   }
 };
 
-// Create a New Coupon
+// Create a New Coupon (Admin Only)
 export const createCoupon = async (req, res) => {
   try {
-    const { code, discount, expiresAt, usageLimit } = req.body;
+    const { code, discount, expiryDate, usageLimit } = req.body;
 
-    const existingCoupon = await prisma.coupon.findUnique({ where: { code } });
-    if (existingCoupon) {
-      return res.status(400).json({ success: false, message: "Coupon code already exists" });
-    }
+    // const existingCoupon = await prisma.coupon.findUnique({ where: { code } });
+    // if (existingCoupon) {
+    //   return res.status(400).json({ success: false, message: "Coupon code already exists" });
+    // }
 
     const newCoupon = await prisma.coupon.create({
       data: {
         code,
         discount,
-        expiresAt: new Date(expiresAt),
-        usageLimit,
+        expiryDate: new Date(expiryDate),
+        usageLimit: usageLimit || null, // Optional field
       },
     });
 
@@ -87,7 +87,7 @@ export const createCoupon = async (req, res) => {
   }
 };
 
-// Delete a Coupon
+// Delete a Coupon (Admin Only)
 export const deleteCoupon = async (req, res) => {
   try {
     const { id } = req.params;

@@ -8,7 +8,9 @@ export const getProducts = async (req, res) => {
     res.status(200).json({ success: true, message: "All products", products });
   } catch (error) {
     console.error("Error in finding products", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -19,12 +21,16 @@ export const getProduct = async (req, res) => {
       where: { id: parseInt(req.params.id) },
     });
     if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
     res.status(200).json({ success: true, message: "Product found", product });
   } catch (error) {
     console.error("Error in finding product", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -34,10 +40,14 @@ export const getProductsByCategory = async (req, res) => {
     const products = await prisma.product.findMany({
       where: { category: req.params.category },
     });
-    res.status(200).json({ success: true, message: "Products by category", products });
+    res
+      .status(200)
+      .json({ success: true, message: "Products by category", products });
   } catch (error) {
     console.error("Error in finding products by category", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -45,6 +55,18 @@ export const getProductsByCategory = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const { name, description, price, image, category, shape } = req.body;
+
+    // check if product with same name exists
+
+    const existingProduct = await prisma.product.findFirst({
+      where: { name },
+    });
+
+    if (existingProduct) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product already exists" });
+    }
 
     let uploadedImage = null;
     if (image) {
@@ -61,13 +83,17 @@ export const createProduct = async (req, res) => {
         price,
         category,
         shape,
-        image: uploadedImage || "", 
+        image: uploadedImage || "",
       },
     });
-    res.status(201).json({ success: true, message: "Product created", product });
+    res
+      .status(201)
+      .json({ success: true, message: "Product created", product });
   } catch (error) {
     console.error("Error in creating product", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -97,10 +123,14 @@ export const updateProduct = async (req, res) => {
       },
     });
 
-    res.status(200).json({ success: true, message: "Product updated", updatedProduct });
+    res
+      .status(200)
+      .json({ success: true, message: "Product updated", updatedProduct });
   } catch (error) {
     console.error("Error in updating product", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -113,6 +143,8 @@ export const deleteProduct = async (req, res) => {
     res.status(200).json({ success: true, message: "Product deleted" });
   } catch (error) {
     console.error("Error in deleting product", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };

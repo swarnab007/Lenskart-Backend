@@ -2,7 +2,7 @@ import express from "express";
 import {
   createCoupon,
   deleteCoupon,
-  getCoupon,
+  getCoupons,
   validateCoupon,
 } from "../controllers/couponController.js";
 import { protectedRoute, adminAccess } from "../middlewares/authMiddleware.js";
@@ -13,7 +13,7 @@ const router = express.Router();
 router.post("/create-coupon", protectedRoute, adminAccess, createCoupon);
 
 // GET: Get all coupons (Admin Only)
-router.get("/", protectedRoute, adminAccess, getCoupon);
+router.get("/", protectedRoute, adminAccess, getCoupons);
 
 // POST: Validate a coupon (User)
 router.post("/validate", protectedRoute, validateCoupon);
